@@ -2,193 +2,138 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ishaq RepVision - Smooth Recording</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&family=Fraunces:wght@700&display=swap" rel="stylesheet">
+<title>ISHAQ REP VISION - v4 Final</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Fraunces:wght@700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0A0A0B;--card:#18181B;--border:#27272A;--text:#FAFAFA;--muted:#71717A;--accent:#7C3AED;--red:#EF4444}
+:root{--bg:#0A0A0B;--card:#18181B;--border:#27272A;--text:#FAFAFA;--muted:#71717A;--accent:#7C3AED;--accent2:#A78BFA;--red:#EF4444}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif}
-.topnav{max-width:1200px;margin:auto;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;background:rgba(10,10,11,.95);border-bottom:1px solid var(--border)}
-.logo{display:flex;align-items:center;gap:12px;font-family:'Fraunces',serif;font-size:22px;font-weight:800}
-.logo-icon{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#7C3AED,#A78BFA);display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(124,58,237,.4)}
-.logo span{color:#A78BFA}
-.badge{font-size:10px;padding:6px 12px;border-radius:100px;border:1px solid var(--border);color:var(--muted)}
-.app-shell{max-width:1200px;margin:auto;padding:20px;display:grid;grid-template-columns:360px 1fr;gap:16px}
-@media(max-width:900px){.app-shell{grid-template-columns:1fr}}
+.topnav{max-width:1280px;margin:0 auto;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:20;background:rgba(10,10,11,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:12px;font-family:'Fraunces',serif;font-weight:800;font-size:20px}
+.logo-icon{width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#A78BFA,#7C3AED);display:grid;place-items:center;box-shadow:0 0 24px rgba(124,58,237,.45)}
+.logo span{color:var(--accent2)}
+.badge{font-size:10px;letter-spacing:1px;padding:6px 12px;border-radius:100px;background:#1E1E22;border:1px solid var(--border);color:var(--muted)}
+.shell{max-width:1280px;margin:0 auto;padding:18px;display:grid;grid-template-columns:360px 1fr;gap:16px}
+@media(max-width:900px){.shell{grid-template-columns:1fr}}
 .card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:16px}
-.card h3{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
-select{width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:#0E0E10;color:#fff;font-weight:600}
-.btn{width:100%;padding:13px;border-radius:12px;border:none;font-weight:700;cursor:pointer;margin-top:8px;display:flex;justify-content:center}
+.card h3{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+select{width:100%;padding:13px 12px;border-radius:12px;background:#0E0E10;border:1px solid var(--border);color:#fff;font-weight:600;font-size:14px}
+.btn{width:100%;padding:13px;border-radius:12px;border:none;font-weight:700;cursor:pointer;margin-top:9px;font-size:13px}
 .btn-primary{background:#fff;color:#000}
 .btn-rec{background:var(--red);color:#fff}
+.btn-pro{background:linear-gradient(135deg,#7C3AED,#A78BFA);color:#fff}
 .btn-ghost{background:transparent;border:1px solid var(--border);color:#fff}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
-.stat{text-align:center;padding:12px;background:#0E0E10;border:1px solid var(--border);border-radius:14px}
-.stat span{font-family:'Fraunces',serif;font-size:28px;display:block}
-.stat label{font-size:9px;color:var(--muted);letter-spacing:1px}
-.video-wrap{position:relative;background:#000;border-radius:18px;overflow:hidden;aspect-ratio:4/3;border:1px solid var(--border)}
-video,canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-video{transform:scaleX(-1)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.stat{background:#0E0E10;border:1px solid var(--border);border-radius:14px;padding:12px;text-align:center}
+.stat b{font-family:'Fraunces',serif;font-size:28px;display:block}
+.stat label{font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase}
+.video-wrap{position:relative;background:#000;border-radius:20px;overflow:hidden;aspect-ratio:16/10;border:1px solid var(--border)}
+video,canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
 canvas{z-index:2}
-.overlay{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;justify-content:space-between;padding:10px;pointer-events:none}
+.overlay{position:absolute;inset:0;z-index:3;padding:10px;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none}
 .topbar{display:flex;justify-content:space-between}
-.pill{background:rgba(0,0,0,.7);color:#fff;padding:5px 10px;border-radius:100px;font-size:10px}
-.pill.live{opacity:0}.pill.live.on{opacity:1;background:var(--red);animation:pulse 1s infinite}
+.pill{background:rgba(0,0,0,.65);color:#fff;padding:6px 11px;border-radius:100px;font-size:10px;font-weight:600;border:1px solid rgba(255,255,255,.12)}
+.pill.rec{display:none}.pill.rec.on{display:block;background:var(--red);animation:pulse 1s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
-.hint{background:rgba(255,255,255,.9);color:#000;padding:8px 12px;border-radius:10px;font-size:11px;text-align:center;align-self:center}
-.gallery{margin-top:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
-.clip{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:6px}
-.clip video{position:static;transform:none;width:100%;border-radius:8px;aspect-ratio:4/3}
-.clip a{color:#A78BFA;font-size:11px;font-weight:700;text-decoration:none}
-footer{text-align:center;color:var(--muted);font-size:11px;padding:16px}
+.hint{align-self:center;background:rgba(255,255,255,.92);color:#000;padding:8px 14px;border-radius:12px;font-size:11px;font-weight:600;max-width:90%;text-align:center}
+.gallery{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.clip{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:8px}
+.clip video{position:static;transform:none;width:100%;border-radius:10px;aspect-ratio:4/3}
+.clip.meta{font-size:11px;color:var(--muted);margin:6px 0}
+.clip a{font-size:12px;color:var(--accent2);font-weight:700;text-decoration:none}
+footer{max-width:1280px;margin:20px auto;padding:16px;text-align:center;color:var(--muted);font-size:11px}
 </style>
 </head>
 <body>
 <div class="topnav">
-<div class="logo"><div class="logo-icon"><svg width="26" height="26" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="22" r="11" stroke="white" stroke-width="5" fill="white" fill-opacity="0.2"/><path d="M35 35 L28 55 L45 60 L50 45 L60 50 L75 48 L72 62 L58 65 L50 85 L38 85 L40 65 L25 60 L22 45 Z" stroke="white" stroke-width="4" fill="none" stroke-linejoin="round"/><circle cx="20" cy="48" r="6" fill="white"/><circle cx="80" cy="48" r="6" fill="white"/><circle cx="38" cy="88" r="5" fill="white"/><circle cx="52" cy="88" r="5" fill="white"/></svg></div>ISHAQ <span>REP VISION</span></div>
-<div class="badge">SMOOTH REC • BY ISHAQ</div>
+<div class="logo"><div class="logo-icon"><svg width="24" height="24" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="22" r="11" stroke="white" stroke-width="5"/><path d="M35 35 L28 55 L45 60 L50 45 L60 50 L75 48 L72 62 L58 65 L50 85 L38 85 L40 65 L25 60 L22 45 Z" stroke="white" stroke-width="4" stroke-linejoin="round" fill="none"/><circle cx="20" cy="48" r="6" fill="white"/><circle cx="80" cy="48" r="6" fill="white"/><circle cx="38" cy="88" r="5" fill="white"/><circle cx="52" cy="88" r="5" fill="white"/></svg></div>ISHAQ <span>REP VISION</span></div>
+<div class="badge">v4 FINAL • BUILT BY ISHAQ</div>
 </div>
-<div class="app-shell">
+<div class="shell">
 <div>
 <div class="card">
-<h3>Ishaq Workout</h3>
-<select id="exercise"><option value="squat">Squats</option><option value="pushup">Push-ups</option><option value="jumpingjack">Jumping Jacks</option><option value="curl">Bicep Curls</option><option value="lunge">Lunges</option></select>
+<h3>Workout Settings</h3>
+<select id="exercise"><option value="squat">Squats</option><option value="pushup" selected>Push-ups</option><option value="jumpingjack">Jumping Jacks</option><option value="curl">Bicep Curls</option><option value="lunge">Lunges</option></select>
 <button id="startBtn" class="btn btn-primary">Start Camera</button>
-<button id="recordBtn" class="btn btn-rec">● Record Smooth</button>
-<button id="resetBtn" class="btn btn-ghost">Reset</button>
-<div class="stats"><div class="stat"><span id="reps">0</span><label>REPS</label></div><div class="stat"><span id="timer">00:00</span><label>TIME</label></div><div class="stat"><span id="stage">Ready</span><label>STATUS</label></div></div>
-<div style="font-size:10px;color:#71717A;text-align:center;margin-top:8px">💡 Tip: Use Chrome on phone for smoothest video</div>
+<button id="recSmooth" class="btn btn-rec">● Record Smooth (No Crack)</button>
+<button id="recPro" class="btn btn-pro">✦ Record Pro (With AI Skeleton)</button>
+<button id="resetBtn" class="btn btn-ghost">Reset Reps & Timer</button>
+<div class="stats"><div class="stat"><b id="reps">0</b><label>REPS</label></div><div class="stat"><b id="timer">00:00</b><label>TIME</label></div><div class="stat"><b id="stage">Ready</b><label>STATUS</label></div></div>
 </div>
 </div>
 <div>
-<div class="video-wrap"><video id="video" autoplay playsinline muted></video><canvas id="canvas"></canvas><div class="overlay"><div class="topbar"><div class="pill" id="modelBadge">LOADING ISHAQ AI...</div><div class="pill live" id="liveBadge">● REC</div></div><div class="hint" id="hint">Loading...</div></div></div>
+<div class="video-wrap"><video id="video" autoplay playsinline muted></video><canvas id="canvas"></canvas><div class="overlay"><div class="topbar"><div class="pill" id="modelBadge">Loading Ishaq AI...</div><div class="pill rec" id="recBadge">● REC</div></div><div class="hint" id="hint">Select Push-ups → Start Camera → Record Smooth</div></div></div>
 <div class="gallery" id="gallery"></div>
 </div>
 </div>
-<footer>Built by <b>Ishaq</b> — Ishaq RepVision Smooth © 2026</footer>
+<footer>Built with 💜 by Ishaq • RepVision v4 Final © 2026</footer>
 <script type="importmap">{"imports":{"@mediapipe/tasks-vision":"https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs"}}</script>
 <script type="module">
 import {PoseLandmarker,FilesetResolver,DrawingUtils} from "@mediapipe/tasks-vision";
-const video=document.getElementById('video'),canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d',{alpha:false});
+const video=document.getElementById('video'),canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d');
 const repsEl=document.getElementById('reps'),timerEl=document.getElementById('timer'),stageEl=document.getElementById('stage');
-const exSel=document.getElementById('exercise'),startBtn=document.getElementById('startBtn'),recordBtn=document.getElementById('recordBtn'),resetBtn=document.getElementById('resetBtn');
-const hint=document.getElementById('hint'),liveBadge=document.getElementById('liveBadge'),modelBadge=document.getElementById('modelBadge'),gallery=document.getElementById('gallery');
-const W=640,H=480,INFER_MS=66; // AI runs ~15x/sec, drawing + recording run at full camera rate
-let poseLandmarker,running=false,reps=0,state='up',seconds=0,timerInt=null,drawingUtils,mediaRecorder=null,chunks=[],recording=false;
-let lastLm=null,lastInfer=0,lastStage='',recMime='video/webm',audioCtx=null;
-
-function angle(a,b,c){const ab={x:a.x-b.x,y:a.y-b.y},cb={x:c.x-b.x,y:c.y-b.y};return Math.acos(Math.min(1,Math.max(-1,(ab.x*cb.x+ab.y*cb.y)/(Math.hypot(ab.x,ab.y)*Math.hypot(cb.x,cb.y)))))*180/Math.PI;}
-function setStage(t){if(t!==lastStage){lastStage=t;stageEl.textContent=t;}}
-
+const exSel=document.getElementById('exercise'),startBtn=document.getElementById('startBtn'),recSmooth=document.getElementById('recSmooth'),recPro=document.getElementById('recPro'),resetBtn=document.getElementById('resetBtn');
+const hint=document.getElementById('hint'),recBadge=document.getElementById('recBadge'),modelBadge=document.getElementById('modelBadge'),gallery=document.getElementById('gallery');
+let poseLandmarker,running=false,reps=0,state='up',seconds=0,timerInt=null,lastT=-1,drawingUtils,recorder=null,chunks=[],isRecording=false,frame=0;
+function angle(a,b,c){const ab={x:a.x-b.x,y:a.y-b.y},cb={x:c.x-b.x,y:c.y-b.y};const d=(ab.x*cb.x+ab.y*cb.y)/(Math.hypot(ab.x,ab.y)*Math.hypot(cb.x,cb.y));return Math.acos(Math.min(1,Math.max(-1,d)))*180/Math.PI;}
 async function init(){
  const fs=await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
  poseLandmarker=await PoseLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",delegate:"GPU"},runningMode:"VIDEO",numPoses:1});
- canvas.width=W;canvas.height=H;
  drawingUtils=new DrawingUtils(ctx);
- modelBadge.textContent="ISHAQ AI • SMOOTH READY";
- hint.textContent="Ishaq RepVision Smooth ready. Start camera.";
+ modelBadge.textContent="ISHAQ AI • READY";hint.textContent="Select Push-ups → Start Camera → Record Smooth";
 }
 await init();
-
 startBtn.onclick=async()=>{
  if(!running){
-  const vid={width:{ideal:W},height:{ideal:H},frameRate:{ideal:30},facingMode:"user"};
-  let s;
-  try{s=await navigator.mediaDevices.getUserMedia({video:vid,audio:{echoCancellation:true,noiseSuppression:true}});}
-  catch{s=await navigator.mediaDevices.getUserMedia({video:vid,audio:false});}
-  video.srcObject=s;await video.play();
-  running=true;startBtn.textContent="Stop Camera";
+  const s=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640},height:{ideal:480},facingMode:"user"},audio:true});
+  video.srcObject=s;await video.play();canvas.width=640;canvas.height=480;running=true;startBtn.textContent="Stop Camera";
   timerInt=setInterval(()=>{seconds++;timerEl.textContent=String(Math.floor(seconds/60)).padStart(2,'0')+":"+String(seconds%60).padStart(2,'0');},1000);
-  schedule();
- }else{
-  running=false;startBtn.textContent="Start Camera";clearInterval(timerInt);
-  if(recording)stopRec();if(video.srcObject)video.srcObject.getTracks().forEach(t=>t.stop());
-  lastLm=null;
- }
+  requestAnimationFrame(loop);
+ }else{running=false;startBtn.textContent="Start Camera";clearInterval(timerInt);if(isRecording)stopRec();video.srcObject?.getTracks().forEach(t=>t.stop());}
 };
-
-recordBtn.onclick=()=>{if(!running){hint.textContent="Start camera first!";return;}if(!recording)startRec();else stopRec();};
-
-// vp8 is much lighter to encode in real time than vp9 (vp9 was the main cause of lag)
-function getMime(){
- const list=['video/webm;codecs=vp8,opus','video/webm;codecs=vp8','video/webm','video/mp4'];
- for(const m of list){if(MediaRecorder.isTypeSupported(m))return m;}
- return '';
-}
-
-function startRec(){
- recMime=getMime();
- const stream=canvas.captureStream(30);
- const audio=video.srcObject.getAudioTracks()[0];
- const finalStream=new MediaStream([...stream.getVideoTracks(),...(audio?[audio]:[])]);
- chunks=[];
- const opts={videoBitsPerSecond:2500000,audioBitsPerSecond:96000};
- if(recMime)opts.mimeType=recMime;
- try{mediaRecorder=new MediaRecorder(finalStream,opts);}
- catch{mediaRecorder=new MediaRecorder(finalStream);}
- const type=mediaRecorder.mimeType||recMime||'video/webm';
- const ext=type.includes('mp4')?'mp4':'webm';
- mediaRecorder.ondataavailable=e=>{if(e.data&&e.data.size>0)chunks.push(e.data);};
- mediaRecorder.onstop=()=>{
-  const blob=new Blob(chunks,{type});
-  const url=URL.createObjectURL(blob);
-  const d=document.createElement('div');d.className='clip';
-  d.innerHTML=`<video src="${url}" controls playsinline></video><div style="font-size:10px;color:#71717A;margin:4px 0">${exSel.value} • ${reps} reps • ${timerEl.textContent}</div><a href="${url}" download="ishaq-${Date.now()}.${ext}">⬇ Download Smooth Video</a>`;
-  gallery.prepend(d);
-  chunks=[];
-  hint.textContent="Saved! Smooth video ready below.";
+function getMime(){const types=['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm','video/mp4'];for(const t of types){if(MediaRecorder.isTypeSupported(t))return t;}return 'video/webm';}
+function startRec(mode){
+ if(!running){hint.textContent="Start camera first!";return;}
+ let stream;
+ if(mode==='smooth'){stream=video.srcObject;}else{const cStream=canvas.captureStream(24);const aTrack=video.srcObject.getAudioTracks()[0];stream=new MediaStream([...cStream.getVideoTracks(),...(aTrack?[aTrack]:[])]);}
+ const mime=getMime();chunks=[];
+ try{recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:2500000});}catch{recorder=new MediaRecorder(stream,{mimeType:mime});}
+ recorder.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
+ recorder.onstop=()=>{
+  const blob=new Blob(chunks,{type:mime});const url=URL.createObjectURL(blob);
+  const card=document.createElement('div');card.className='clip';
+  card.innerHTML=`<video src="${url}" controls playsinline></video><div class="meta">${exSel.options[exSel.selectedIndex].text} • ${reps} reps • ${timerEl.textContent} • ${mode}</div><a href="${url}" download="ishaq-${exSel.value}-${Date.now()}.webm">⬇ Download ${mode} Video</a>`;
+  gallery.prepend(card);hint.textContent=mode==='smooth'?"Smooth video saved! No crack!":"Pro video saved!";
  };
- mediaRecorder.start(1000); // larger timeslice = far less overhead than 100ms
- recording=true;recordBtn.textContent="■ Stop & Save";liveBadge.classList.add('on');
- hint.textContent="Recording smooth 30fps...";
+ recorder.start(200);isRecording=true;recBadge.classList.add('on');recBadge.textContent=mode==='smooth'?"● REC SMOOTH":"● REC PRO";
+ if(mode==='smooth'){recSmooth.textContent="■ Stop & Save Smooth";}else{recPro.textContent="■ Stop & Save Pro";}
 }
-
-function stopRec(){if(mediaRecorder&&recording&&mediaRecorder.state!=='inactive')mediaRecorder.stop();recording=false;recordBtn.textContent="● Record Smooth";liveBadge.classList.remove('on');}
-resetBtn.onclick=()=>{reps=0;seconds=0;state='up';repsEl.textContent='0';timerEl.textContent='00:00';setStage('Ready');};
-
-function beep(){
- try{
-  if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-  if(audioCtx.state==='suspended')audioCtx.resume();
-  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
-  o.frequency.value=880;g.gain.value=0.15;o.connect(g);g.connect(audioCtx.destination);
-  o.start();o.stop(audioCtx.currentTime+0.1);
- }catch{}
-}
-
-function countRep(){reps++;repsEl.textContent=reps;beep();}
-
-function runRepLogic(lm){
- const ex=exSel.value;
- if(ex==='squat'||ex==='lunge'){const avg=(angle(lm[23],lm[25],lm[27])+angle(lm[24],lm[26],lm[28]))/2;setStage(avg>160?"UP":avg<90?"DOWN":"GO");if(avg>160&&state==='down'){state='up';countRep();}if(avg<90&&state==='up')state='down';}
- else if(ex==='pushup'){const avg=(angle(lm[11],lm[13],lm[15])+angle(lm[12],lm[14],lm[16]))/2;if(avg>160&&state==='down'){state='up';countRep();}if(avg<80&&state==='up')state='down';}
- else if(ex==='jumpingjack'){const up=lm[15].y<lm[11].y&&lm[16].y<lm[12].y;if(up&&state==='down'){state='up';countRep();}if(!up&&state==='up'&&lm[15].y>lm[23].y)state='down';}
- else{const avg=angle(lm[12],lm[14],lm[16]);if(avg>160&&state==='up'){state='down';countRep();}if(avg<50&&state==='down')state='up';}
-}
-
-// Draw loop is synced to real camera frames; AI is throttled and never blocks every frame
-function schedule(){
- if(video.requestVideoFrameCallback)video.requestVideoFrameCallback(frame);
- else requestAnimationFrame(frame);
-}
-
-function frame(){
- if(!running)return;
- const now=performance.now();
- if(now-lastInfer>=INFER_MS){
-  lastInfer=now;
-  try{
-   const r=poseLandmarker.detectForVideo(video,now);
-   lastLm=(r.landmarks&&r.landmarks[0])||null;
-   if(lastLm)runRepLogic(lastLm);
-  }catch{}
+function stopRec(){if(recorder&&isRecording){recorder.stop();}isRecording=false;recBadge.classList.remove('on');recSmooth.textContent="● Record Smooth (No Crack)";recPro.textContent="✦ Record Pro (With AI Skeleton)";}
+recSmooth.onclick=()=>{if(!isRecording)startRec('smooth');else stopRec();};
+recPro.onclick=()=>{if(!isRecording)startRec('pro');else stopRec();};
+resetBtn.onclick=()=>{reps=0;seconds=0;state='up';repsEl.textContent='0';timerEl.textContent='00:00';stageEl.textContent='Ready';};
+function beep(){try{const ac=new (window.AudioContext||window.webkitAudioContext)(),o=ac.createOscillator();o.frequency.value=900;o.connect(ac.destination);o.start();setTimeout(()=>{o.stop();ac.close();},120);}catch{}}
+async function loop(){
+ if(!running)return;frame++;
+ if(video.currentTime!==lastT){lastT=video.currentTime;
+  if(frame%2===0){
+   try{
+    const r=poseLandmarker.detectForVideo(video,performance.now());
+    ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(video,0,0,canvas.width,canvas.height);
+    ctx.save();ctx.scale(-1,1);ctx.fillStyle="rgba(124,58,237,0.9)";ctx.font="bold 14px Outfit";ctx.fillText("ISHAQ REP VISION",-canvas.width+16,24);ctx.fillStyle="white";ctx.font="bold 16px Outfit";ctx.fillText(`REPS ${reps} | ${timerEl.textContent}`,-canvas.width+16,46);ctx.restore();
+    if(r.landmarks&&r.landmarks[0]){
+     const lm=r.landmarks[0];drawingUtils.drawLandmarks(lm,{radius:3,color:"#A78BFA"});drawingUtils.drawConnectors(lm,PoseLandmarker.POSE_CONNECTIONS,{color:"rgba(255,255,255,0.35)",lineWidth:2});
+     if(exSel.value==='squat'){const av=(angle(lm[23],lm[25],lm[27])+angle(lm[24],lm[26],lm[28]))/2;stageEl.textContent=av>160?"UP":av<95?"DOWN":"";if(av>160&&state==='down'){state='up';reps++;repsEl.textContent=reps;beep();}if(av<95&&state==='up')state='down';}
+     else if(exSel.value==='pushup'){const av=(angle(lm[11],lm[13],lm[15])+angle(lm[12],lm[14],lm[16]))/2;stageEl.textContent=av>160?"UP":av<85?"DOWN":"";if(av>160&&state==='down'){state='up';reps++;repsEl.textContent=reps;beep();}if(av<85&&state==='up')state='down';}
+     else if(exSel.value==='lunge'){const av=angle(lm[23],lm[25],lm[27]);stageEl.textContent=av>160?"UP":av<100?"DOWN":"";if(av>160&&state==='down'){state='up';reps++;repsEl.textContent=reps;beep();}if(av<100&&state==='up')state='down';}
+     else if(exSel.value==='jumpingjack'){const handsUp=lm[15].y<lm[11].y&&lm[16].y<lm[12].y;const feetWide=Math.abs(lm[27].x-lm[28].x)>0.28;if(handsUp&&feetWide&&state==='down'){state='up';reps++;repsEl.textContent=reps;beep();}if(!handsUp&&!feetWide&&state==='up')state='down';}
+     else if(exSel.value==='curl'){const av=angle(lm[12],lm[14],lm[16]);stageEl.textContent=av>150?"DOWN":av<55?"UP":"";if(av>150&&state==='up'){state='down';reps++;repsEl.textContent=reps;beep();}if(av<55&&state==='down')state='up';}
+    }
+   }catch(e){}
+  }
  }
- // mirrored selfie view drawn straight into the canvas, so what you see is exactly what gets recorded
- ctx.save();ctx.translate(W,0);ctx.scale(-1,1);
- ctx.drawImage(video,0,0,W,H);
- if(lastLm){
-  drawingUtils.drawLandmarks(lastLm,{radius:2,color:"#A78BFA"});
-  drawingUtils.drawConnectors(lastLm,PoseLandmarker.POSE_CONNECTIONS,{color:"#ffffff55",lineWidth:2});
- }
- ctx.restore();
- ctx.font="bold 20px Outfit, sans-serif";ctx.fillStyle="white";ctx.shadowColor="rgba(0,0,0,.7)"
+ requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>
