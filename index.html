@@ -27,7 +27,8 @@ select{width:100%;padding:12px;border-radius:12px;border:1px solid var(--border)
 .stat span{font-family:'Fraunces',serif;font-size:28px;display:block}
 .stat label{font-size:9px;color:var(--muted);letter-spacing:1px}
 .video-wrap{position:relative;background:#000;border-radius:18px;overflow:hidden;aspect-ratio:4/3;border:1px solid var(--border)}
-video,canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+video,canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+video{transform:scaleX(-1)}
 canvas{z-index:2}
 .overlay{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;justify-content:space-between;padding:10px;pointer-events:none}
 .topbar{display:flex;justify-content:space-between}
@@ -68,17 +69,21 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:16px}
 <script type="importmap">{"imports":{"@mediapipe/tasks-vision":"https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs"}}</script>
 <script type="module">
 import {PoseLandmarker,FilesetResolver,DrawingUtils} from "@mediapipe/tasks-vision";
-const video=document.getElementById('video'),canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d');
+const video=document.getElementById('video'),canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d',{alpha:false});
 const repsEl=document.getElementById('reps'),timerEl=document.getElementById('timer'),stageEl=document.getElementById('stage');
 const exSel=document.getElementById('exercise'),startBtn=document.getElementById('startBtn'),recordBtn=document.getElementById('recordBtn'),resetBtn=document.getElementById('resetBtn');
 const hint=document.getElementById('hint'),liveBadge=document.getElementById('liveBadge'),modelBadge=document.getElementById('modelBadge'),gallery=document.getElementById('gallery');
-let poseLandmarker,running=false,reps=0,state='up',seconds=0,timerInt=null,lastT=-1,drawingUtils,mediaRecorder=null,chunks=[],recording=false,frameCount=0;
+const W=640,H=480,INFER_MS=66; // AI runs ~15x/sec, drawing + recording run at full camera rate
+let poseLandmarker,running=false,reps=0,state='up',seconds=0,timerInt=null,drawingUtils,mediaRecorder=null,chunks=[],recording=false;
+let lastLm=null,lastInfer=0,lastStage='',recMime='video/webm',audioCtx=null;
 
 function angle(a,b,c){const ab={x:a.x-b.x,y:a.y-b.y},cb={x:c.x-b.x,y:c.y-b.y};return Math.acos(Math.min(1,Math.max(-1,(ab.x*cb.x+ab.y*cb.y)/(Math.hypot(ab.x,ab.y)*Math.hypot(cb.x,cb.y)))))*180/Math.PI;}
+function setStage(t){if(t!==lastStage){lastStage=t;stageEl.textContent=t;}}
 
 async function init(){
  const fs=await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
  poseLandmarker=await PoseLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",delegate:"GPU"},runningMode:"VIDEO",numPoses:1});
+ canvas.width=W;canvas.height=H;
  drawingUtils=new DrawingUtils(ctx);
  modelBadge.textContent="ISHAQ AI • SMOOTH READY";
  hint.textContent="Ishaq RepVision Smooth ready. Start camera.";
@@ -87,87 +92,103 @@ await init();
 
 startBtn.onclick=async()=>{
  if(!running){
-  const s=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640},height:{ideal:480},facingMode:"user"},audio:true});
+  const vid={width:{ideal:W},height:{ideal:H},frameRate:{ideal:30},facingMode:"user"};
+  let s;
+  try{s=await navigator.mediaDevices.getUserMedia({video:vid,audio:{echoCancellation:true,noiseSuppression:true}});}
+  catch{s=await navigator.mediaDevices.getUserMedia({video:vid,audio:false});}
   video.srcObject=s;await video.play();
-  canvas.width=640;canvas.height=480;
   running=true;startBtn.textContent="Stop Camera";
   timerInt=setInterval(()=>{seconds++;timerEl.textContent=String(Math.floor(seconds/60)).padStart(2,'0')+":"+String(seconds%60).padStart(2,'0');},1000);
-  requestAnimationFrame(loop);
+  schedule();
  }else{
   running=false;startBtn.textContent="Start Camera";clearInterval(timerInt);
   if(recording)stopRec();if(video.srcObject)video.srcObject.getTracks().forEach(t=>t.stop());
+  lastLm=null;
  }
 };
 
 recordBtn.onclick=()=>{if(!running){hint.textContent="Start camera first!";return;}if(!recording)startRec();else stopRec();};
 
+// vp8 is much lighter to encode in real time than vp9 (vp9 was the main cause of lag)
 function getMime(){
- if(MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) return 'video/webm;codecs=vp9';
- if(MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) return 'video/webm;codecs=vp8';
- if(MediaRecorder.isTypeSupported('video/webm')) return 'video/webm';
- if(MediaRecorder.isTypeSupported('video/mp4')) return 'video/mp4';
- return 'video/webm';
+ const list=['video/webm;codecs=vp8,opus','video/webm;codecs=vp8','video/webm','video/mp4'];
+ for(const m of list){if(MediaRecorder.isTypeSupported(m))return m;}
+ return '';
 }
 
 function startRec(){
- const mime=getMime();
+ recMime=getMime();
  const stream=canvas.captureStream(30);
  const audio=video.srcObject.getAudioTracks()[0];
  const finalStream=new MediaStream([...stream.getVideoTracks(),...(audio?[audio]:[])]);
  chunks=[];
- try{
-  mediaRecorder=new MediaRecorder(finalStream,{mimeType:mime,videoBitsPerSecond:2500000});
- }catch{
-  mediaRecorder=new MediaRecorder(finalStream,{mimeType:mime});
- }
- mediaRecorder.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
+ const opts={videoBitsPerSecond:2500000,audioBitsPerSecond:96000};
+ if(recMime)opts.mimeType=recMime;
+ try{mediaRecorder=new MediaRecorder(finalStream,opts);}
+ catch{mediaRecorder=new MediaRecorder(finalStream);}
+ const type=mediaRecorder.mimeType||recMime||'video/webm';
+ const ext=type.includes('mp4')?'mp4':'webm';
+ mediaRecorder.ondataavailable=e=>{if(e.data&&e.data.size>0)chunks.push(e.data);};
  mediaRecorder.onstop=()=>{
-  const blob=new Blob(chunks,{type:mime});
+  const blob=new Blob(chunks,{type});
   const url=URL.createObjectURL(blob);
   const d=document.createElement('div');d.className='clip';
-  d.innerHTML=`<video src="${url}" controls playsinline></video><div style="font-size:10px;color:#71717A;margin:4px 0">${exSel.value} • ${reps} reps • ${timerEl.textContent}</div><a href="${url}" download="ishaq-${Date.now()}.webm">⬇ Download Smooth Video</a>`;
+  d.innerHTML=`<video src="${url}" controls playsinline></video><div style="font-size:10px;color:#71717A;margin:4px 0">${exSel.value} • ${reps} reps • ${timerEl.textContent}</div><a href="${url}" download="ishaq-${Date.now()}.${ext}">⬇ Download Smooth Video</a>`;
   gallery.prepend(d);
+  chunks=[];
   hint.textContent="Saved! Smooth video ready below.";
  };
- mediaRecorder.start(100);
+ mediaRecorder.start(1000); // larger timeslice = far less overhead than 100ms
  recording=true;recordBtn.textContent="■ Stop & Save";liveBadge.classList.add('on');
  hint.textContent="Recording smooth 30fps...";
 }
 
-function stopRec(){if(mediaRecorder&&recording)mediaRecorder.stop();recording=false;recordBtn.textContent="● Record Smooth";liveBadge.classList.remove('on');}
-resetBtn.onclick=()=>{reps=0;seconds=0;state='up';repsEl.textContent='0';timerEl.textContent='00:00';stageEl.textContent='Ready';};
-function beep(){try{const ac=new (window.AudioContext||window.webkitAudioContext)(),o=ac.createOscillator();o.frequency.value=880;o.connect(ac.destination);o.start();setTimeout(()=>{o.stop();ac.close();},100);}catch{}}
+function stopRec(){if(mediaRecorder&&recording&&mediaRecorder.state!=='inactive')mediaRecorder.stop();recording=false;recordBtn.textContent="● Record Smooth";liveBadge.classList.remove('on');}
+resetBtn.onclick=()=>{reps=0;seconds=0;state='up';repsEl.textContent='0';timerEl.textContent='00:00';setStage('Ready');};
 
-async function loop(){
- if(!running)return;
- frameCount++;
- // Only run AI every 2nd frame for smoothness
- if(video.currentTime!==lastT && frameCount%2===0){
-  lastT=video.currentTime;
-  try{
-   const r=poseLandmarker.detectForVideo(video,performance.now());
-   ctx.clearRect(0,0,canvas.width,canvas.height);
-   ctx.drawImage(video,0,0,canvas.width,canvas.height);
-   if(r.landmarks&&r.landmarks[0]){
-    const lm=r.landmarks[0];
-    drawingUtils.drawLandmarks(lm,{radius:2,color:"#A78BFA"});
-    drawingUtils.drawConnectors(lm,PoseLandmarker.POSE_CONNECTIONS,{color:"#ffffff33",lineWidth:2});
-    // Rep logic
-    if(exSel.value==='squat'||exSel.value==='lunge'){const avg=(angle(lm[23],lm[25],lm[27])+angle(lm[24],lm[26],lm[28]))/2;stageEl.textContent=avg>160?"UP":avg<90?"DOWN":"GO";if(avg>160&&state==='down'){state='up';reps++;repsEl.textContent=reps;beep();}if(avg<90&&state==='up')state='down';}
-    else if(exSel.value==='pushup'){const avg=(angle(lm[11],lm[13],lm[15])+angle(lm[12],lm[14],lm[16]))/2;if(avg>160&&state==='down'){state='up';reps++;repsEl.textContent=reps;beep();}if(avg<80&&state==='up')state='down';}
-    else if(exSel.value==='jumpingjack'){const up=lm[15].y<lm[11].y&&lm[16].y<lm[12].y;if(up&&state==='down'){state='up';reps++;repsEl.textContent=reps;beep();}if(!up&&state==='up'&&lm[15].y>lm[23].y)state='down';}
-    else{const avg=angle(lm[12],lm[14],lm[16]);if(avg>160&&state==='up'){state='down';reps++;repsEl.textContent=reps;beep();}if(avg<50&&state==='down')state='up';}
-    // Draw overlay text on canvas for recording
-    ctx.save();ctx.scale(-1,1);ctx.font="bold 20px Outfit";ctx.fillStyle="white";ctx.fillText(`REPS: ${reps} | ${timerEl.textContent}`,-canvas.width+20,30);ctx.restore();
-   }
-  }catch{}
- } else if(frameCount%2===1){
-  // On skipped AI frames, still redraw video for smooth 30fps recording
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.drawImage(video,0,0,canvas.width,canvas.height);
- }
- requestAnimationFrame(loop);
+function beep(){
+ try{
+  if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==='suspended')audioCtx.resume();
+  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.frequency.value=880;g.gain.value=0.15;o.connect(g);g.connect(audioCtx.destination);
+  o.start();o.stop(audioCtx.currentTime+0.1);
+ }catch{}
 }
-</script>
-</body>
-</html>
+
+function countRep(){reps++;repsEl.textContent=reps;beep();}
+
+function runRepLogic(lm){
+ const ex=exSel.value;
+ if(ex==='squat'||ex==='lunge'){const avg=(angle(lm[23],lm[25],lm[27])+angle(lm[24],lm[26],lm[28]))/2;setStage(avg>160?"UP":avg<90?"DOWN":"GO");if(avg>160&&state==='down'){state='up';countRep();}if(avg<90&&state==='up')state='down';}
+ else if(ex==='pushup'){const avg=(angle(lm[11],lm[13],lm[15])+angle(lm[12],lm[14],lm[16]))/2;if(avg>160&&state==='down'){state='up';countRep();}if(avg<80&&state==='up')state='down';}
+ else if(ex==='jumpingjack'){const up=lm[15].y<lm[11].y&&lm[16].y<lm[12].y;if(up&&state==='down'){state='up';countRep();}if(!up&&state==='up'&&lm[15].y>lm[23].y)state='down';}
+ else{const avg=angle(lm[12],lm[14],lm[16]);if(avg>160&&state==='up'){state='down';countRep();}if(avg<50&&state==='down')state='up';}
+}
+
+// Draw loop is synced to real camera frames; AI is throttled and never blocks every frame
+function schedule(){
+ if(video.requestVideoFrameCallback)video.requestVideoFrameCallback(frame);
+ else requestAnimationFrame(frame);
+}
+
+function frame(){
+ if(!running)return;
+ const now=performance.now();
+ if(now-lastInfer>=INFER_MS){
+  lastInfer=now;
+  try{
+   const r=poseLandmarker.detectForVideo(video,now);
+   lastLm=(r.landmarks&&r.landmarks[0])||null;
+   if(lastLm)runRepLogic(lastLm);
+  }catch{}
+ }
+ // mirrored selfie view drawn straight into the canvas, so what you see is exactly what gets recorded
+ ctx.save();ctx.translate(W,0);ctx.scale(-1,1);
+ ctx.drawImage(video,0,0,W,H);
+ if(lastLm){
+  drawingUtils.drawLandmarks(lastLm,{radius:2,color:"#A78BFA"});
+  drawingUtils.drawConnectors(lastLm,PoseLandmarker.POSE_CONNECTIONS,{color:"#ffffff55",lineWidth:2});
+ }
+ ctx.restore();
+ ctx.font="bold 20px Outfit, sans-serif";ctx.fillStyle="white";ctx.shadowColor="rgba(0,0,0,.7)"
