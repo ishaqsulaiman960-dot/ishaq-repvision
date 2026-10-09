@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ishaq RepVision - Record & Count Every Rep</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&family=Fraunces:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0A0A0B;--card:#18181B;--border:#27272A;--text:#FAFAFA;--muted:#71717A;--accent:#7C3AED;--red:#EF4444}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif}
+.topnav{max-width:1200px;margin:auto;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;background:rgba(10,10,11,.9);backdrop-filter:blur(10px);position:sticky;top:0;z-index:10;border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:12px;font-family:'Fraunces',serif;font-size:22px;font-weight:800}
+.logo-icon{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#7C3AED,#A78BFA);display:flex;align-items:center;justify-content:center;border:2px solid #27272A;box-shadow:0 0 20px rgba(124,58,237,.3)}
+.logo span{color:#A78BFA}
+.badge{font-size:11px;padding:6px 12px;border-radius:100px;border:1px solid var(--border);color:var(--muted)}
+.app-shell{max-width:1200px;margin:auto;padding:24px 24px 40px;display:grid;grid-template-columns:360px 1fr;gap:18px}
+@media(max-width:900px){.app-shell{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:18px}
+.card h3{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+select{width:100%;padding:14px;border-radius:12px;border:1px solid var(--border);background:#0E0E10;color:#fff;font-weight:600}
+.btn{width:100%;padding:14px;border-radius:12px;border:none;font-weight:700;cursor:pointer;margin-top:10px;display:flex;justify-content:center}
+.btn-primary{background:#fff;color:#000}
+.btn-rec{background:var(--red);color:#fff}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:#fff}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+.stat{text-align:center;padding:14px;background:#0E0E10;border:1px solid var(--border);border-radius:14px}
+.stat span{font-family:'Fraunces',serif;font-size:30px;display:block}
+.stat label{font-size:10px;color:var(--muted);letter-spacing:1px}
+.video-wrap{position:relative;background:#0E0E10;border-radius:18px;overflow:hidden;aspect-ratio:16/10;border:1px solid var(--border)}
+video,canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+canvas{z-index:2}
+.overlay{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;justify-content:space-between;padding:12px;pointer-events:none}
+.topbar{display:flex;justify-content:space-between}
+.pill{background:rgba(0,0,0,.7);color:#fff;padding:6px 12px;border-radius:100px;font-size:11px}
+.pill.live{opacity:0}.pill.live.on{opacity:1;background:#EF4444}
+.hint{background:rgba(255,255,255,.9);color:#000;padding:10px;border-radius:12px;font-size:12px;text-align:center;align-self:center}
+.gallery{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.clip{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:8px}
+.clip video{position:static;transform:none;width:100%;border-radius:8px}
+.clip a{color:#A78BFA;font-size:12px;font-weight:700;text-decoration:none}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
+footer b{color:#fff}
+</style>
+</head>
+<body>
+<div class="topnav">
+<div class="logo">
+<div class="logo-icon">
+<svg width="30" height="30" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="22" r="12" stroke="white" stroke-width="5" fill="white" fill-opacity="0.2"/><path d="M35 35 L28 55 L45 60 L50 45 L60 50 L75 48 L72 62 L58 65 L50 85 L38 85 L40 65 L25 60 L22 45 Z" stroke="white" stroke-width="4" fill="none" stroke-linejoin="round"/><circle cx="20" cy="48" r="7" fill="white"/><circle cx="80" cy="48" r="7" fill="white"/><circle cx="38" cy="88" r="6" fill="white"/><circle cx="52" cy="88" r="6" fill="white"/></svg>
+</div>
+ISHAQ <span>REP VISION</span>
+</div>
+<div class="badge">BY ISHAQ • 2026</div>
+</div>
+<div class="app-shell">
+<div>
+<div class="card">
+<h3>Your Workout — Ishaq RepVision</h3>
+<select id="exercise">
+<option value="squat">Squats</option>
+<option value="pushup">Push-ups</option>
+<option value="jumpingjack">Jumping Jacks</option>
+<option value="curl">Bicep Curls</option>
+<option value="lunge">Lunges</option>
+</select>
+<button id="startBtn" class="btn btn-primary">Start Camera</button>
+<button id="recordBtn" class="btn btn-rec">● Record with Ishaq</button>
+<button id="resetBtn" class="btn btn-ghost">Reset Reps & Timer</button>
+<div class="stats">
+<div class="stat"><span id="reps">0</span><label>REPS</label></div>
+<div class="stat"><span id="timer">00:00</span><label>TIME</label></div>
+<div class="stat"><span id="stage">Ready</span><label>STATUS</label></div>
+</div>
+</div>
+</div>
+<div>
+<div class="video-wrap">
+<video id="video" autoplay playsinline muted></video>
+<canvas id="canvas"></canvas>
+<div class="overlay">
+<div class="topbar"><div class="pill" id="modelBadge">ISHAQ AI READY</div><div class="pill live" id="liveBadge">● REC ISHAQ</div></div>
+<div class="hint" id="hint">Ishaq RepVision ready. Start camera to begin.</div>
+</div>
+</div>
+<div class="gallery" id="gallery"></div>
+</div>
+</div>
+<footer>Built by <b>Ishaq</b> — Ishaq RepVision © 2026</footer>
+<script type="importmap">{"imports":{"@mediapipe/tasks-vision":"https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs"}}</script>
+<script type="module">
+import {PoseLandmarker,FilesetResolver,DrawingUtils} from "@mediapipe/tasks-vision";
+const video=document.getElementById('video'),canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d');
+const repsEl=document.getElementById('reps'),timerEl=document.getElementById('timer'),stageEl=document.getElementById('stage');
+const exSel=document.getElementById('exercise'),startBtn=document.getElementById('startBtn'),recordBtn=document.getElementById('recordBtn'),resetBtn=document.getElementById('resetBtn');
+const hint=document.getElementById('hint'),liveBadge=document.getElementById('liveBadge'),modelBadge=document.getElementById('modelBadge'),gallery=document.getElementById('gallery');
+let poseLandmarker,running=false,reps=0,state='up',seconds=0,timerInt=null,lastT=-1,drawingUtils,mediaRecorder=null,chunks=[],recording=false;
+function angle(a,b,c){const ab={x:a.x-b.x,y:a.y-b.y},cb={x:c.x-b.x,y:c.y-b.y};return Math.acos(Math.min(1,Math.max(-1,(ab.x*cb.x+ab.y*cb.y)/(Math.hypot(ab.x,ab.y)*Math.hypot(cb.x,cb.y)))))*180/Math.PI;}
+async function init(){
+ const fs=await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+ poseLandmarker=await PoseLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",delegate:"GPU"},runningMode:"VIDEO",numPoses:1});
+ drawingUtils=new DrawingUtils(ctx);
+}
+await init();modelBadge.textContent="ISHAQ AI • READY";
+startBtn.onclick=async()=>{
+ if(!running){
+  const s=await navigator.mediaDevices.getUserMedia({video:{width:1280,height:720,facingMode:"user"},audio:true});
+  video.srcObject=s;await video.play();canvas.width=video.videoWidth;canvas.height=video.videoHeight;
+  running=true;startBtn.textContent="Stop Camera";
+  timerInt=setInterval(()=>{seconds++;timerEl.textContent=String(Math.floor(seconds/60)).padStart(2,'0')+":"+String(seconds%60).padStart(2,'0');},1000);
+  requestAnimationFrame(loop);
+ }else{running=false;startBtn.textContent="Start Camera";clearInterval(timerInt);if(recording)stopRec();if(video.srcObject)video.srcObject.getTracks().forEach(t=>t.stop());}
+};
+recordBtn.onclick=()=>{if(!running){hint.textContent="Start camera first, Ishaq!";return;}if(!recording)startRec();else stopRec();};
+function startRec(){
+ const cStream=canvas.captureStream(30);const aTrack=video.srcObject.getAudioTracks()[0];
+ const combined=new MediaStream([...cStream.getVideoTracks(),...(aTrack?[aTrack]:[])]);
+ chunks=[];mediaRecorder=new MediaRecorder(combined,{mimeType:'video/webm;codecs=vp9'});
+ mediaRecorder.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
+ mediaRecorder.onstop=()=>{
+  const blob=new Blob(chunks,{type:'video/webm'});const url=URL.createObjectURL(blob);
+  const d=document.createElement('div');d.className='clip';
+  d.innerHTML=`<video src="${url}" controls></video><div style="font-size:11px;color:#71717A">${exSel.value} • ${reps} reps • ${timerEl.textContent} • by Ishaq</div><a href="${url}" download="ishaq-repvision-${Date.now()}.webm">Download ↓</a>`;
+  gallery.prepend(d);
+ };
+ mediaRecorder.start(100);recording=true;recordBtn.textContent="■ Stop & Save";liveBadge.classList.add('on');
+}
+function stopRec(){if(mediaRecorder&&recording)mediaRecorder.stop();recording=false;recordBtn.textContent="● Record with Ishaq";liveBadge.classList.remove('on');}
+resetBtn.onclick=()=>{reps=0;seconds=0;state='up';repsEl.textContent='0';timerEl.textContent='00:00';stageEl.textContent='Ready';};
+function beep(){try{const ac=new AudioContext(),o=ac.createOscillator();o.frequency.value=900;o.connect(ac.destination);o.start();setTimeout(()=>{o.stop();ac.close();},120);}catch{}}
+async function loop(){
+ if(!running)return;
+ if(video.currentTime!==lastT){lastT=video.currentTime;
+  const r=poseLandmarker.detectForVideo(video,performance.now());
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(r.landmarks&&r.landmarks[0]){
+   const lm=r.landmarks[0];
+   drawingUtils.drawLandmarks(lm,{radius:3,color:"#7C3AED"});drawingUtils.drawConnectors(lm,PoseLandmarker.POSE_CONNECTIONS,{color:"#ffffff22",lineWidth:2});
+   try{
+    if(exSel.value==='squat'||exSel.value==='lunge'){const avg=(angle(lm[23],lm[25],lm[27])+angle(lm[24],lm[26],lm[28]))/2;stageEl.textContent=avg>160?"UP":avg<90?"DOWN":"GO";if(avg>160&&state==='down'){state='up';reps++;repsEl.textContent=reps;beep();}if(avg<90&&state==='up')state='down';}
+    else if(exSel.value==='pushup'){const avg=(angle(lm[11],lm[13],lm[15])+angle(lm[12],lm[14],lm[16]))/2;if(avg>160&&state==='down'){state='up';reps++;repsEl.textContent=reps;beep();}if(avg<80&&state==='up')state='down';}
+    else if(exSel.value==='jumpingjack'){const up=lm[15].y<lm[11].y&&lm[16].y<lm[12].y;if(up&&state==='down'){state='up';reps++;repsEl.textContent=reps;beep();}if(!up&&state==='up'&&lm[15].y>lm[23].y)state='down';}
+    else{const avg=angle(lm[12],lm[14],lm[16]);if(avg>160&&state==='up'){state='down';reps++;repsEl.textContent=reps;beep();}if(avg<50&&state==='down')state='up';}
+   }catch{}
+  }
+ }
+ requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>
